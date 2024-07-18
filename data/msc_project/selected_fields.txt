@@ -1,8 +1,12 @@
 Authors
 Title
 Year
-Source title
 DOI
 Link
 Abstract
+Author Keywords
+Language of Original Document
+Document Type
+Publication Stage
 Open Access
+Source

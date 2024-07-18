@@ -17,7 +17,7 @@ body {
     height: auto;
 }
 
-.status-info select {
+select {
     min-width: 200px;
     height: 50px;
     border-radius: 5px;
@@ -84,14 +84,14 @@ li {
 .record-details li {
     padding-top: 10px;
     padding-bottom: 10px;
-    border: 1pt solid light-gray;
 }
 
-.record-details button {
-    width: 200px;
+.record-details button, .actions select {
+    width: 250px;
     height: 50px;
     border-radius: 5px;
-    background-color: #f07167;
+    border-width: 2px;
+    border-color: black;
     font-size: 16pt;
     font-weight: bold;
     font-family: sans-serif;
@@ -136,4 +136,17 @@ li {
     border: solid white;
     border-width: 0 2px 4px 0;
     transform: rotate(45deg);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+}
+
+.actions .button_include {
+    background-color: #00afb9;
+}
+
+.actions .button_exclude, .actions select {
+    background-color: #f07167;
 }

@@ -18,6 +18,7 @@
         <p>Records: {{ total_records }}</p>
         <p>Included: {{ included_count }}</p>
         <p>Excluded: {{ excluded_count }}</p>
+        <p>Duplicates: {{ duplicates_count }}</p>
         <p>Current Record: {{ record_id + 1 }}</p>
     </div>
     <div class="container">
@@ -48,16 +49,22 @@
             </ul>
             <div class="actions">
                 {% if not included and not excluded %}
-                    <form action="/action/include/{{ record_id }}" method="post" style="display:inline;">
-                        <button type="submit">Include</button>
+                    <div>
+                        <form method="post" action="/action/include/{{ record_id }}">
+                        <button type="submit" class="button_include">Include</button>
                     </form>
-                    <form action="/action/exclude/{{ record_id }}" method="post" style="display:inline;">
-                        <button type="submit">Exclude</button>
-                    </form>
-                {% elif included %}
-                    <p>This record has already been included.</p>
-                {% elif excluded %}
-                    <p>This record has already been excluded.</p>
+                    </div>
+                    <div>
+                        <form method="post" action="/action/exclude/{{ record_id }}">
+                            <button type="submit" class="button_exclude">Exclude</button>
+                            <select name="exclusion_reason">
+                                <option value="1">Irrelevance</option>
+                                <option value="2">Data Quality</option>
+                                <option value="3">Full Text Unavailable</option>
+                            </select>
+                        </form>
+                    </div>
+
                 {% endif %}
             </div>
         </div>

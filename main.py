@@ -53,6 +53,13 @@ def read_static_info(file_path):
         return [line.strip() for line in file.readlines()]
 
 
+def read_all_csvs(project):
+    sources_dir = get_project_path(project, 'sources')
+    all_files = [os.path.join(sources_dir, f) for f in os.listdir(sources_dir) if f.endswith('.csv')]
+    all_dataframes = [read_csv(f) for f in all_files]
+    return pd.concat(all_dataframes, ignore_index=True) if all_dataframes else pd.DataFrame()
+
+
 # Route to select project
 @app.get("/select_project", response_class=HTMLResponse)
 async def select_project(request: Request):
@@ -68,21 +75,22 @@ async def index(request: Request, record_id: int = 0):
     if not project:
         project = projects[0]  # Default to the first project if none selected
 
-    CSV_FILE = get_project_path(project, 'scopus.csv')
     INCLUSIONS_FILE = get_project_path(project, 'inclusions.csv')
     EXCLUSIONS_FILE = get_project_path(project, 'exclusions.csv')
+    DUPLICATES_FILE = get_project_path(project, 'duplicates.csv')
     INC_EXC_CRITERIA_FILE = get_project_path(project, 'inc_exc_criteria.txt')
     SELECTED_FIELDS_FILE = get_project_path(project, 'selected_fields.txt')
 
-    scopus_df = read_csv(CSV_FILE)
+    all_data_df = read_all_csvs(project)
     inclusions_df = read_csv(INCLUSIONS_FILE)
     exclusions_df = read_csv(EXCLUSIONS_FILE)
+    duplicates_df = read_csv(DUPLICATES_FILE)
     static_info = read_static_info(INC_EXC_CRITERIA_FILE)
 
-    if record_id >= len(scopus_df):
+    if record_id >= len(all_data_df):
         return "No more records."
 
-    record = scopus_df.iloc[record_id].to_dict()
+    record = all_data_df.iloc[record_id].to_dict()
 
     included = (not inclusions_df.empty) and (record['EID'] in inclusions_df['EID'].values)
     excluded = (not exclusions_df.empty) and (record['EID'] in exclusions_df['EID'].values)
@@ -102,9 +110,10 @@ async def index(request: Request, record_id: int = 0):
         "included": included,
         "excluded": excluded,
         "selected_fields": selected_fields,
-        "total_records": len(scopus_df),
+        "total_records": len(all_data_df),
         "included_count": len(inclusions_df),
-        "excluded_count": len(exclusions_df)
+        "excluded_count": len(exclusions_df),
+        "duplicates_count": len(duplicates_df)
     })
 
 
@@ -116,34 +125,47 @@ async def set_project(request: Request, project: str = Form(...)):
     return RedirectResponse(url="/", status_code=303)
 
 
-# Route to handle include/exclude actions
+def check_duplicates(record, all_data_df, inclusions_df, exclusions_df):
+    if 'DOI' in record:
+        doi = record['DOI']
+        if doi in all_data_df['DOI'].values or doi in inclusions_df['DOI'].values or doi in exclusions_df['DOI'].values:
+            return True
+    return False
+
+
 @app.post("/action/{action}/{record_id}")
-async def action(request: Request, action: str, record_id: int):
+async def action(request: Request, action: str, record_id: int, exclusion_reason: int = Form(None)):
     project = request.session.get('project')
     if not project:
         raise HTTPException(status_code=400, detail="No project selected")
 
-    CSV_FILE = get_project_path(project, 'scopus.csv')
     INCLUSIONS_FILE = get_project_path(project, 'inclusions.csv')
     EXCLUSIONS_FILE = get_project_path(project, 'exclusions.csv')
+    DUPLICATES_FILE = get_project_path(project, 'duplicates.csv')
 
-    scopus_df = read_csv(CSV_FILE)
+    all_data_df = read_all_csvs(project)
     inclusions_df = read_csv(INCLUSIONS_FILE)
     exclusions_df = read_csv(EXCLUSIONS_FILE)
+    duplicates_df = read_csv(DUPLICATES_FILE)
 
-    record = scopus_df.iloc[record_id].to_dict()
+    record = all_data_df.iloc[record_id].to_dict()
 
-    if action == 'include':
-        inclusions_df = pd.concat([inclusions_df, pd.DataFrame([record])], ignore_index=True)
-        save_csv(inclusions_df, INCLUSIONS_FILE)
-        download_document(record['Link'], record['Title'], project)
-    elif action == 'exclude':
-        exclusions_df = pd.concat([exclusions_df, pd.DataFrame([record])], ignore_index=True)
-        save_csv(exclusions_df, EXCLUSIONS_FILE)
+    if check_duplicates(record, all_data_df, inclusions_df, exclusions_df):
+        duplicates_df = pd.concat([duplicates_df, pd.DataFrame([record])], ignore_index=True)
+        save_csv(duplicates_df, DUPLICATES_FILE)
+    else:
+        if action == 'include':
+            inclusions_df = pd.concat([inclusions_df, pd.DataFrame([record])], ignore_index=True)
+            save_csv(inclusions_df, INCLUSIONS_FILE)
+            download_document(record['Link'], record['Title'], project)
+        elif action == 'exclude' and exclusion_reason is not None:
+            record['exclusion_reason'] = exclusion_reason
+            exclusions_df = pd.concat([exclusions_df, pd.DataFrame([record])], ignore_index=True)
+            save_csv(exclusions_df, EXCLUSIONS_FILE)
 
-    scopus_df.drop(record_id, inplace=True)
-    scopus_df.reset_index(drop=True, inplace=True)
-    save_csv(scopus_df, CSV_FILE)
+    all_data_df.drop(record_id, inplace=True)
+    all_data_df.reset_index(drop=True, inplace=True)
+    save_csv(all_data_df, get_project_path(project, 'all_data.csv'))
 
     return RedirectResponse(url=f"/?record_id={record_id}", status_code=303)
 
