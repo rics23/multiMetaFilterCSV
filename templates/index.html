@@ -6,6 +6,7 @@
 </head>
 <body>
     <div class="status-info">
+        <img src="static/metaFilterCSV.webp" alt="Logo" class="logo">
         <form method="post" action="/set_project">
             <label for="project">Project: </label>
             <select name="project" id="project" onchange="this.form.submit()">
@@ -14,7 +15,7 @@
                 {% endfor %}
             </select>
         </form>
-        <p>Total Records: {{ total_records }}</p>
+        <p>Records: {{ total_records }}</p>
         <p>Included: {{ included_count }}</p>
         <p>Excluded: {{ excluded_count }}</p>
         <p>Current Record: {{ record_id + 1 }}</p>

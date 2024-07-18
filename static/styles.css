@@ -3,10 +3,18 @@ body {
 }
 
 .status-info {
+    display: flex;
+    align-items: center;
+    gap: 25px;
     background-color: #fed9b7;
     padding: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     text-align: center;
+}
+
+.status-info .logo {
+    max-width: 500px;
+    height: auto;
 }
 
 .status-info select {
@@ -14,6 +22,9 @@ body {
     height: 50px;
     border-radius: 5px;
     background-color: #f07167;
+    font-size: 16pt;
+    font-weight: bold;
+    font-family: sans-serif;
 }
 
 .status-info form {
@@ -37,12 +48,18 @@ body {
     width: 20%;
     background-color: #00afb9;
     padding: 25px;
+    margin-right: 10px;
+    font-size: 10pt;
+    font-family: sans-serif;
 }
 
 .record-details {
     width: 80%;
     background-color: #fdfcdc;
     padding: 25px;
+    font-size: 14pt;
+    font-family: sans-serif;
+    line-height: 1.5;
 }
 
 .actions {

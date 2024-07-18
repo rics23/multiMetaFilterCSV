@@ -1,13 +1,18 @@
 INCLUSION CRITERIA
 
-1.
-2.
-3.
-4.
+1. [Relevance] Studies that focus on machine learning methodologies for identifying online sexual predators; Research that includes a discussion on pre-filtering techniques, feature selection, classification methods, and evaluation metrics; Papers that address ethical considerations and human-centred evaluations in the context of machine learning and online predator detection.
+2. [Publication Type] Peer-reviewed journal articles; Conference papers; Review articles and meta-analyses; Technical reports and dissertations if they contribute significant findings to the field.
+3. [Publication Date] Studies published in the last 10 years (2015 to 2024, inclusive) to ensure the inclusion of the most recent advancements and trends in the field.
+4. [Language] Studies published in English
+5. [Geographic Scope] Studies conducted in various geographic regions, as long as they focus on online environments relevant to the topic.
+6. [Availability] Full-text articles available through Edge Hill University’s library or other accessible databases.
 
 EXCLUSION CRITERIA
 
-1. Not Open Access
-2.
-3.
-4.
+1. [Irrelevance] Studies that do not focus on the use of machine learning for identifying online sexual predators; Papers that discuss online safety or cybersecurity broadly without specific emphasis on sexual predators and machine learning.
+2. [Publication Type] Editorials, opinion pieces, letters to the editor, and non-peer-reviewed articles; Articles lacking sufficient methodological detail or empirical data.
+3. [Publication Date] Studies published more than 10 years ago, unless they are seminal works critical to the foundational understanding of the topic.
+4. [Language] Studies published in languages other than English unless a translation is available.
+5. [Data Quality] Studies with insufficient data, unclear methodology, or significant methodological flaws. Papers with high risk of bias, as determined through critical appraisal tools.
+6. [Duplicate Studies] Duplicate studies or those with substantially overlapping data and results (choose the most comprehensive or latest version).
+7. [Full Text Unavailable] Full-text articles not available through Edge Hill University’s library or other accessible databases.
