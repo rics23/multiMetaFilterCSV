@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>metaFilterCSV</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+</head>
+<body>
+    <div class="status-info">
+        <form method="post" action="/set_project">
+            <label for="project">Project: </label>
+            <select name="project" id="project" onchange="this.form.submit()">
+                {% for proj in projects %}
+                    <option value="{{ proj }}" {% if proj == project %}selected{% endif %}>{{ proj }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <p>Total Records: {{ total_records }}</p>
+        <p>Included: {{ included_count }}</p>
+        <p>Excluded: {{ excluded_count }}</p>
+        <p>Current Record: {{ record_id + 1 }}</p>
+    </div>
+    <div class="container">
+        <div class="static-info">
+            <h2>Inclusion / Exclusion Criteria</h2>
+            <div>
+                {% for line in static_info %}
+                    <p>{{ line }}</p>
+                {% endfor %}
+            </div>
+
+            <h2>Show/Hide Fields</h2>
+            <ul>
+                {% for field in record.keys() %}
+                    <li>
+                        <input type="checkbox" id="check_{{ field }}" class="custom-checkbox" checked onclick="toggleField('{{ field }}')">
+                        <label for="check_{{ field }}">{{ field }}</label>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="record-details">
+            <h2>Record Details</h2>
+            <ul>
+                {% for key, value in record.items() %}
+                    <li id="field_{{ key }}"><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
+            <div class="actions">
+                {% if not included and not excluded %}
+                    <form action="/action/include/{{ record_id }}" method="post" style="display:inline;">
+                        <button type="submit">Include</button>
+                    </form>
+                    <form action="/action/exclude/{{ record_id }}" method="post" style="display:inline;">
+                        <button type="submit">Exclude</button>
+                    </form>
+                {% elif included %}
+                    <p>This record has already been included.</p>
+                {% elif excluded %}
+                    <p>This record has already been excluded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script id="selectedFieldsData" type="application/json">{{ selected_fields | tojson | safe }}</script>
+    <script src="/static/script.js" defer></script>
+</body>
+</html>
