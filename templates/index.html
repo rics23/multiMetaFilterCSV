@@ -15,11 +15,16 @@
                 {% endfor %}
             </select>
         </form>
-        <p>Records: {{ total_records }}</p>
-        <p>Included: {{ included_count }}</p>
-        <p>Excluded: {{ excluded_count }}</p>
-        <p>Duplicates: {{ duplicates_count }}</p>
-        <p>Current Record: {{ record_id + 1 }}</p>
+        <!-- Status message div -->
+        <div id="status">
+            {% if message %}
+                <p class="message">{{ message }}</p>
+            {% endif %}
+        </div>
+        <p class="total-records">Records: {{ total_records }}</p>
+        <p class="included-count">Included: {{ included_count }}</p>
+        <p class="excluded-count">Excluded: {{ excluded_count }}</p>
+        <p class="duplicates-count">Duplicates: {{ duplicates_count }}</p>
     </div>
     <div class="container">
         <div class="static-info">
@@ -50,17 +55,17 @@
             <div class="actions">
                 {% if not included and not excluded %}
                     <div>
-                        <form method="post" action="/action/include/{{ record_id }}">
-                        <button type="submit" class="button_include">Include</button>
-                    </form>
+                        <form id="include-form" onsubmit="handleAction(event, 'include', {{ record_id }})">
+                            <button type="submit" class="button_include">Include</button>
+                        </form>
                     </div>
                     <div>
-                        <form method="post" action="/action/exclude/{{ record_id }}">
+                        <form id="exclude-form" onsubmit="handleAction(event, 'exclude', {{ record_id }})">
                             <button type="submit" class="button_exclude">Exclude</button>
-                            <select name="exclusion_reason">
-                                <option value="1">Irrelevance</option>
-                                <option value="2">Data Quality</option>
-                                <option value="3">Full Text Unavailable</option>
+                            <select name="exclusion_reason" required>
+                                <option value="Irrelevance">Irrelevance</option>
+                                <option value="Data Quality">Data Quality</option>
+                                <option value="Full Text Unavailable">Full Text Unavailable</option>
                             </select>
                         </form>
                     </div>

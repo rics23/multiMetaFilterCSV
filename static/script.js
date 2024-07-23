@@ -1,3 +1,62 @@
+async function handleAction(event, action, recordId) {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    if (action === 'exclude') {
+        const exclusionReason = form.querySelector('select[name="exclusion_reason"]').value;
+        formData.append('exclusion_reason', exclusionReason);
+    }
+
+    if (action === 'include') {
+        formData.append('exclusion_reason', '');
+    }
+
+    try {
+        const response = await fetch(`/action/${action}/${recordId}`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        const result = await response.json();
+        console.log(result); // Log the entire result object
+        if (result.status === 'success') {
+            updateRecord(result.record, result.record_id, result.total_records, result.included_count, result.excluded_count, result.duplicates_count);
+        } else {
+            console.error(result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function updateRecord(record, recordId, totalRecords, includedCount, excludedCount, duplicatesCount) {
+    console.log(`Updating record with ID: ${recordId}`);
+    console.log(`Total Records: ${totalRecords}, Included: ${includedCount}, Excluded: ${excludedCount}, Duplicates: ${duplicatesCount}`);
+
+    if (recordId === -1) {
+        document.querySelector('.record-details').innerHTML = "<p>No more records.</p>";
+        return;
+    }
+
+    const recordDetails = document.querySelector('.record-details ul');
+    recordDetails.innerHTML = '';
+
+    for (const [key, value] of Object.entries(record)) {
+        const li = document.createElement('li');
+        li.id = `field_${key}`;
+        li.innerHTML = `<strong>${key}:</strong> ${value}`;
+        recordDetails.appendChild(li);
+    }
+
+    // Update the status bar with the new counts
+    document.querySelector('.total-records').innerText = `Records: ${totalRecords}`;
+    document.querySelector('.included-count').innerText = `Included: ${includedCount}`;
+    document.querySelector('.excluded-count').innerText = `Excluded: ${excludedCount}`;
+    document.querySelector('.duplicates-count').innerText = `Duplicates: ${duplicatesCount}`;
+}
+
 function toggleField(field) {
     var checkBox = document.getElementById('check_' + field);
     var fieldDiv = document.getElementById('field_' + field);
