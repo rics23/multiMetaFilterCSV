@@ -136,6 +136,16 @@ async def set_project(request: Request, project: str = Form(...)):
     return RedirectResponse(url="/", status_code=303)
 
 
+@app.get("/set_project_manually/{project_name}", response_class=RedirectResponse)
+@app.post("/set_project_manually/{project_name}", response_class=RedirectResponse)
+async def set_project_manually(request: Request, project_name: str):
+    project_name = project_name.strip()
+    if project_name not in projects:
+        raise HTTPException(status_code=404, detail="Project not found")
+    request.session['project'] = project_name
+    return RedirectResponse(url="/", status_code=303)
+
+
 def check_duplicates(record, inclusions_df, exclusions_df):
     if 'DOI' in record:
         doi = record['DOI']
