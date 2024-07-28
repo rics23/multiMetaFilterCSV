@@ -1,12 +1,8 @@
+Document Title
 Authors
-Title
-Year
-DOI
-Link
+Publication Title
+Publication Year
 Abstract
+DOI
+PDF Link
 Author Keywords
-Language of Original Document
-Document Type
-Publication Stage
-Open Access
-Source

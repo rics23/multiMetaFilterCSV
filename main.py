@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 import os
 
-
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key='your_secret_key')
 
@@ -44,20 +43,27 @@ def read_all_csvs(project):
     return pd.concat(all_dataframes, ignore_index=True) if all_dataframes else pd.DataFrame()
 
 
-def ensure_eid_column(df):
-    if 'EID' not in df.columns:
-        df['EID'] = None
+def concatenate_fields(df):
+    df['combined'] = df.apply(lambda row: '_'.join(row.astype(str)), axis=1)
     return df
 
 
-def filter_out_processed_records(all_data_df, inclusions_df, exclusions_df, duplicates_df):
-    all_data_df = ensure_eid_column(all_data_df)
-    inclusions_df = ensure_eid_column(inclusions_df)
-    exclusions_df = ensure_eid_column(exclusions_df)
-    duplicates_df = ensure_eid_column(duplicates_df)
+def concatenate_record_fields(record):
+    return '_'.join(map(str, record.values()))
 
-    processed_eids = set(inclusions_df['EID']).union(exclusions_df['EID'], duplicates_df['EID'])
-    return all_data_df[~all_data_df['EID'].isin(processed_eids)]
+
+def filter_out_processed_records(all_data_df, inclusions_df, exclusions_df, duplicates_df):
+    # Concatenate all fields to form a unique combined field
+    all_data_df = concatenate_fields(all_data_df)
+    inclusions_df = concatenate_fields(inclusions_df)
+    exclusions_df = concatenate_fields(exclusions_df)
+    duplicates_df = concatenate_fields(duplicates_df)
+
+    # Create a set of combined fields from inclusions, exclusions, and duplicates
+    processed_combined = set(inclusions_df['combined']).union(exclusions_df['combined'], duplicates_df['combined'])
+
+    # Filter out records whose combined field is in the processed_combined set
+    return all_data_df[~all_data_df['combined'].isin(processed_combined)].drop(columns=['combined'])
 
 
 def find_and_move_duplicates(project):
@@ -106,9 +112,25 @@ async def index(request: Request):
         return "No more records."
 
     record = all_data_df.iloc[0].to_dict()
-    included = (not inclusions_df.empty) and (record['EID'] in inclusions_df['EID'].values)
-    excluded = (not exclusions_df.empty) and (record['EID'] in exclusions_df['EID'].values)
-    selected_fields = read_static_info(SELECTED_FIELDS_FILE) if os.path.exists(SELECTED_FIELDS_FILE) else list(record.keys())
+    # Create a combined string for the record
+    combined_record = concatenate_record_fields(record)
+
+    # Ensure inclusions_df, exclusions_df, and duplicates_df have the combined field
+    if not inclusions_df.empty:
+        inclusions_df['combined'] = inclusions_df.apply(lambda row: '_'.join(row.astype(str)), axis=1)
+    if not exclusions_df.empty:
+        exclusions_df['combined'] = exclusions_df.apply(lambda row: '_'.join(row.astype(str)), axis=1)
+    if not duplicates_df.empty:
+        duplicates_df['combined'] = duplicates_df.apply(lambda row: '_'.join(row.astype(str)), axis=1)
+
+    # Check if the combined record string is in any of the DataFrames
+    included = (not inclusions_df.empty) and (combined_record in inclusions_df['combined'].values)
+    excluded = (not exclusions_df.empty) and (combined_record in exclusions_df['combined'].values)
+    duplicate = (not duplicates_df.empty) and (combined_record in duplicates_df['combined'].values)
+
+    # Read the selected fields from a file or use all keys from the record
+    selected_fields = read_static_info(SELECTED_FIELDS_FILE) if os.path.exists(SELECTED_FIELDS_FILE) else list(
+        record.keys())
 
     return templates.TemplateResponse("index.html", {
         "request": request,
@@ -147,12 +169,11 @@ async def set_project_manually(request: Request, project_name: str):
 
 
 def check_duplicates(record, inclusions_df, exclusions_df):
-    if 'DOI' in record:
-        doi = record['DOI']
-        if not inclusions_df.empty and doi in inclusions_df['DOI'].values:
-            return True
-        if not exclusions_df.empty and doi in exclusions_df['DOI'].values:
-            return True
+    combined_record = concatenate_record_fields(record)
+    if not inclusions_df.empty and combined_record in inclusions_df['combined'].values:
+        return True
+    if not exclusions_df.empty and combined_record in exclusions_df['combined'].values:
+        return True
     return False
 
 
@@ -188,13 +209,12 @@ async def action(action: str, record_id: int, request: Request, exclusion_reason
             inclusions_df = pd.concat([inclusions_df, pd.DataFrame([record])], ignore_index=True)
             save_csv(inclusions_df, INCLUSIONS_FILE)
         elif action == "exclude":
-            record['Exclusion_Reason'] = exclusion_reason
+            record['exclusion_reason'] = exclusion_reason
             exclusions_df = pd.concat([exclusions_df, pd.DataFrame([record])], ignore_index=True)
             save_csv(exclusions_df, EXCLUSIONS_FILE)
 
-    # Drop the record by index, not by label
+    # Remove the record from all_data_df by index, not by label
     all_data_df = all_data_df.drop(all_data_df.index[record_id])
-    all_data_df.reset_index(drop=True, inplace=True)
     save_csv(all_data_df, ALL_DATA_FILE)
 
     # Re-read the CSV to ensure the state is updated
@@ -209,8 +229,8 @@ async def action(action: str, record_id: int, request: Request, exclusion_reason
         next_record = None
 
     # Filter the next record based on selected fields
-    with open(SELECTED_FIELDS_FILE, 'r') as file:
-        selected_fields = [line.strip() for line in file.readlines()]
+    selected_fields = read_static_info(SELECTED_FIELDS_FILE) if os.path.exists(SELECTED_FIELDS_FILE) else list(
+        record.keys())
 
     if next_record:
         next_record = {key: next_record[key] for key in selected_fields if key in next_record}
