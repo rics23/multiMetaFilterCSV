@@ -19,6 +19,7 @@ PROJECTS_DIR = 'data'
 projects = [name for name in os.listdir(PROJECTS_DIR) if os.path.isdir(os.path.join(PROJECTS_DIR, name))]
 
 
+# Helper functions
 def get_project_path(project_name, filename):
     return os.path.join(PROJECTS_DIR, project_name, filename)
 
@@ -29,6 +30,7 @@ def read_csv(file_path):
 
 def save_csv(df, file_path):
     df.to_csv(file_path, index=False)
+
 
 def read_static_info(file_path):
     return [line.strip() for line in open(file_path, 'r')] if os.path.exists(file_path) else []
@@ -49,25 +51,19 @@ def concatenate_fields(df):
 def concatenate_record_fields(record):
     return '_'.join(map(str, record.values()))
 
-def filter_out_processed_records(all_data_df, inclusions_df, exclusions_df, duplicates_df):
-    # Concatenate all fields to form a unique combined field
-    all_data_df = concatenate_fields(all_data_df)
-    inclusions_df = concatenate_fields(inclusions_df)
-    exclusions_df = concatenate_fields(exclusions_df)
-    duplicates_df = concatenate_fields(duplicates_df)
 
-    # Create a set of combined fields from inclusions, exclusions, and duplicates
-    processed_combined = set(inclusions_df['combined']).union(exclusions_df['combined'], duplicates_df['combined'])
+def filter_out_processed_records(all_data_df, inclusions_df, exclusions_df):
+    # Concatenate all fields to form a unique combined field temporarily
+    all_data_df_temp = concatenate_fields(all_data_df.copy())
+    inclusions_df_temp = concatenate_fields(inclusions_df.copy())
+    exclusions_df_temp = concatenate_fields(exclusions_df.copy())
 
-    return all_data_df[~all_data_df['combined'].isin(processed_combined)].drop(columns=['combined'])
+    # Create a set of combined fields from inclusions and exclusions
+    processed_combined = set(inclusions_df_temp['combined']).union(exclusions_df_temp['combined'])
 
-def check_duplicates(record, inclusions_df, exclusions_df):
-    combined_record = concatenate_record_fields(record)
-    if not inclusions_df.empty and combined_record in inclusions_df['combined'].values:
-        return True
-    if not exclusions_df.empty and combined_record in exclusions_df['combined'].values:
-        return True
-    return False
+    # Filter out records whose combined field is in the processed_combined set
+    return all_data_df[~all_data_df_temp['combined'].isin(processed_combined)]
+
 
 def find_and_move_duplicates(project):
     sources_dir = get_project_path(project, 'sources')
@@ -96,22 +92,18 @@ async def index(request: Request):
     project = request.session.get('project')
     if not project:
         project = projects[0]
-        request.session['project'] = project  # Set the default project in session
 
     INCLUSIONS_FILE = get_project_path(project, 'inclusions.csv')
     EXCLUSIONS_FILE = get_project_path(project, 'exclusions.csv')
-    DUPLICATES_FILE = get_project_path(project, 'duplicates.csv')
     INC_EXC_CRITERIA_FILE = get_project_path(project, 'inc_exc_criteria.txt')
     SELECTED_FIELDS_FILE = get_project_path(project, 'selected_fields.txt')
 
     all_data_df = read_csv(get_project_path(project, 'all_data.csv'))
     inclusions_df = read_csv(INCLUSIONS_FILE)
     exclusions_df = read_csv(EXCLUSIONS_FILE)
-    duplicates_df = read_csv(DUPLICATES_FILE)
     static_info = read_static_info(INC_EXC_CRITERIA_FILE)
 
-    # Filter out processed records
-    all_data_df = filter_out_processed_records(all_data_df, inclusions_df, exclusions_df, duplicates_df)
+    all_data_df = filter_out_processed_records(all_data_df, inclusions_df, exclusions_df)
 
     if all_data_df.empty:
         return "No more records."
@@ -119,9 +111,12 @@ async def index(request: Request):
     record = all_data_df.iloc[0].to_dict()
     combined_record = concatenate_record_fields(record)
 
-    included = combined_record in inclusions_df['combined'].values if not inclusions_df.empty else False
-    excluded = combined_record in exclusions_df['combined'].values if not exclusions_df.empty else False
-    duplicate = combined_record in duplicates_df['combined'].values if not duplicates_df.empty else False
+    # Ensure inclusions_df and exclusions_df have the combined field
+    inclusions_df_temp = concatenate_fields(inclusions_df.copy())
+    exclusions_df_temp = concatenate_fields(exclusions_df.copy())
+
+    included = (not inclusions_df_temp.empty) and (combined_record in inclusions_df_temp['combined'].values)
+    excluded = (not exclusions_df_temp.empty) and (combined_record in exclusions_df_temp['combined'].values)
 
     selected_fields = read_static_info(SELECTED_FIELDS_FILE) if os.path.exists(SELECTED_FIELDS_FILE) else list(record.keys())
 
@@ -138,7 +133,7 @@ async def index(request: Request):
         "total_records": len(all_data_df),
         "included_count": len(inclusions_df),
         "excluded_count": len(exclusions_df),
-        "duplicates_count": len(duplicates_df),
+        "duplicates_count": len(read_csv(get_project_path(project, 'duplicates.csv'))),
         "message": ""
     })
 
@@ -159,6 +154,18 @@ async def set_project_manually(request: Request, project_name: str):
         raise HTTPException(status_code=404, detail="Project not found")
     request.session['project'] = project_name
     return RedirectResponse(url="/", status_code=303)
+
+
+def check_duplicates(record, inclusions_df, exclusions_df):
+    inclusions_df_temp = concatenate_fields(inclusions_df.copy())
+    exclusions_df_temp = concatenate_fields(exclusions_df.copy())
+    combined_record = concatenate_record_fields(record)
+    if not inclusions_df_temp.empty and combined_record in inclusions_df_temp['combined'].values:
+        return True
+    if not exclusions_df_temp.empty and combined_record in exclusions_df_temp['combined'].values:
+        return True
+    return False
+
 
 @app.post("/action/{action}/{record_id}")
 async def action(action: str, record_id: int, request: Request, exclusion_reason: str = Form(None)):
@@ -194,20 +201,25 @@ async def action(action: str, record_id: int, request: Request, exclusion_reason
             exclusions_df = pd.concat([exclusions_df, pd.DataFrame([record])], ignore_index=True)
             save_csv(exclusions_df, EXCLUSIONS_FILE)
 
+    # Remove the record from all_data_df by index
     all_data_df = all_data_df.drop(all_data_df.index[record_id])
     save_csv(all_data_df, ALL_DATA_FILE)
 
+    # Re-read the CSV to ensure the state is updated
     all_data_df = read_csv(ALL_DATA_FILE)
-    all_data_df = filter_out_processed_records(all_data_df, inclusions_df, exclusions_df, duplicates_df)
+    all_data_df = filter_out_processed_records(all_data_df, inclusions_df, exclusions_df)
 
     if not all_data_df.empty:
         next_record_id = 0
         next_record = all_data_df.iloc[next_record_id].to_dict()
     else:
         next_record_id = -1
-        next_record = None
+        next_record = {}
 
-    selected_fields = read_static_info(SELECTED_FIELDS_FILE) if os.path.exists(SELECTED_FIELDS_FILE) else list(record.keys())
+    # Filter selected fields
+    selected_fields = read_static_info(SELECTED_FIELDS_FILE)
+    if selected_fields:
+        next_record = {key: next_record[key] for key in selected_fields if key in next_record}
 
     def sanitize_for_json(data):
         if isinstance(data, dict):
@@ -215,6 +227,11 @@ async def action(action: str, record_id: int, request: Request, exclusion_reason
         return data
 
     next_record = sanitize_for_json(next_record)
+
+    print(f"Total Records: {len(all_data_df)}")
+    print(f"Included Count: {len(inclusions_df)}")
+    print(f"Excluded Count: {len(exclusions_df)}")
+    print(f"Duplicates Count: {len(duplicates_df)}")
 
     return {
         "status": "success",

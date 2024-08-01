@@ -1,8 +1,11 @@
-Document Title
 Authors
-Publication Title
-Publication Year
-Abstract
+Title
+Year
+Source title
 DOI
-PDF Link
+Link
+Abstract
 Author Keywords
+Language of Original Document
+Document Type
+Open Access
