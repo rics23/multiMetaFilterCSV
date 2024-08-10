@@ -2,10 +2,22 @@ Authors
 Title
 Year
 Source title
+Volume
+Issue
+Art. No.
+Page start
+Page end
 DOI
 Link
 Abstract
-Author Keywords
+ISSN
+ISBN
+CODEN
+PubMed ID
 Language of Original Document
+Abbreviated Source Title
 Document Type
+Publication Stage
 Open Access
+Source
+EID
