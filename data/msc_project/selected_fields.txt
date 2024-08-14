@@ -1,23 +1,14 @@
+Document Title
 Authors
-Title
-Year
-Source title
-Volume
-Issue
-Art. No.
-Page start
-Page end
-DOI
-Link
+Publication Title
+Publication Year
+Start Page
+End Page
 Abstract
-ISSN
-ISBN
-CODEN
-PubMed ID
-Language of Original Document
-Abbreviated Source Title
-Document Type
-Publication Stage
-Open Access
-Source
-EID
+ISBNs
+DOI
+PDF Link
+Author Keywords
+Online Date
+Publisher
+Document Identifier
