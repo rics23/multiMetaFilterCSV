@@ -41,7 +41,6 @@ def read_static_info(file_path):
 #     all_dataframes = [read_csv(f) for f in all_files]
 #     return pd.concat(all_dataframes, ignore_index=True) if all_dataframes else pd.DataFrame()
 
-
 def find_and_move_duplicates(project):
 
     avoid_fields = ['ISSN']

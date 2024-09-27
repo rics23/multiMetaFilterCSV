@@ -105,21 +105,4 @@ function loadFieldSelection() {
     });
 }
 
-// function setProjectManually(projectName) {
-//     fetch(`/set_project_manually/${projectName}`, {
-//         method: 'POST'
-//     })
-//     .then(response => {
-//         if (response.ok) {
-//             window.location.href = "/";
-//         } else {
-//             console.error('Failed to set project manually:', response.statusText);
-//         }
-//     })
-//     .catch(error => {
-//         console.error('Error:', error);
-//     });
-// }
-
-
 document.addEventListener('DOMContentLoaded', loadFieldSelection);
