@@ -6,10 +6,13 @@ async function handleAction(event, action, recordId) {
 
     if (action === 'exclude') {
         const exclusionReason = form.querySelector('select[name="exclusion_reason"]').value;
+        formData.append('inclusion_importance', '');
         formData.append('exclusion_reason', exclusionReason);
     }
 
     if (action === 'include') {
+        const inclusionImportance = form.querySelector('select[name="inclusion_importance"]').value;
+        formData.append('inclusion_importance', inclusionImportance);
         formData.append('exclusion_reason', '');
     }
 

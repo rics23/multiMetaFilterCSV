@@ -7,3 +7,4 @@ numpy~=2.0.0
 matplotlib~=3.9.2
 plotly~=5.23.0
 UpSetPlot~=0.9.0
+arxiv

@@ -15,7 +15,6 @@
                 {% endfor %}
             </select>
         </form>
-        <!-- Status message div -->
         <div id="status">
             {% if message %}
                 <p class="message">{{ message }}</p>
@@ -56,15 +55,25 @@
                     <div>
                         <form id="include-form" onsubmit="handleAction(event, 'include', {{ record_id }})">
                             <button type="submit" class="button_include">Include</button>
+                            <select name="inclusion_importance" class="button_include" required>
+                                <option value="1">1 - Minimal Relevance</option>
+                                <option value="2">2 - Low Relevance</option>
+                                <option value="3">3 - Moderate Relevance</option>
+                                <option value="4">4 - High Relevance</option>
+                                <option value="5">5 - Essential</option>
+                            </select>
                         </form>
                     </div>
                     <div>
                         <form id="exclude-form" onsubmit="handleAction(event, 'exclude', {{ record_id }})">
                             <button type="submit" class="button_exclude">Exclude</button>
-                            <select name="exclusion_reason" required>
-                                <option value="Irrelevance">Irrelevance</option>
-                                <option value="Data Quality">Data Quality</option>
-                                <option value="Full Text Unavailable">Full Text Unavailable</option>
+                            <select name="exclusion_reason" class="button_exclude" required>
+                                <option value="Geographic Mismatch">Geographic Mismatch</option>
+                                <option value="Irrelevant Application Area">Irrelevant Application Area</option>
+                                <option value="Insufficient Empirical Evidence">Insufficient Empirical Evidence</option>
+                                <option value="Non-Academic Source">Non-Academic Source</option>
+                                <option value="Limited Relevance to Research">Limited Relevance to Research</option>
+                                <option value="Language Barrier">Language Barrier</option>
                             </select>
                         </form>
                     </div>

@@ -286,7 +286,9 @@ async def set_project(request: Request, project: str = Form(...)):
 
 
 @app.post("/action/{action}/{record_id}")
-async def action(action: str, record_id: int, request: Request, exclusion_reason: str = Form(None)):
+async def action(action: str, record_id: int, request: Request,
+                 inclusion_importance: int = Form(None),
+                 exclusion_reason: str = Form(None)):
     project = request.session.get('project')
     if not project:
         project = projects[0]
@@ -305,10 +307,11 @@ async def action(action: str, record_id: int, request: Request, exclusion_reason
     record = all_data_df.iloc[record_id]
 
     if action == "include":
+        record["Inclusion_Importance"] = inclusion_importance
         inclusions_df = pd.concat([inclusions_df, pd.DataFrame([record])], ignore_index=True)
         save_csv(inclusions_df, INCLUSIONS_FILE)
     elif action == "exclude":
-        record['Exclusion_Reason'] = exclusion_reason
+        record["Exclusion_Reason"] = exclusion_reason
         exclusions_df = pd.concat([exclusions_df, pd.DataFrame([record])], ignore_index=True)
         save_csv(exclusions_df, EXCLUSIONS_FILE)
 
@@ -316,7 +319,6 @@ async def action(action: str, record_id: int, request: Request, exclusion_reason
     save_csv(all_data_df, ALL_DATA_FILE)
 
     all_data_df = read_csv(ALL_DATA_FILE)
-
     if not all_data_df.empty:
         next_record_id = 0
         next_record = all_data_df.iloc[next_record_id].to_dict()
@@ -328,12 +330,12 @@ async def action(action: str, record_id: int, request: Request, exclusion_reason
     if selected_fields:
         next_record = {key: next_record[key] for key in selected_fields if key in next_record}
 
-    # def sanitize_for_json(data):
-    #     if isinstance(data, dict):
-    #         return {k: (None if (isinstance(v, float) and (np.isnan(v) or np.isinf(v))) else v) for k, v in data.items()}
-    #     return data
-    #
-    # next_record = sanitize_for_json(next_record)
+    def sanitize_for_json(data):
+        if isinstance(data, dict):
+            return {k: (None if (isinstance(v, float) and (np.isnan(v) or np.isinf(v))) else v) for k, v in data.items()}
+        return data
+
+    next_record = sanitize_for_json(next_record)
 
     return {
         "status": "success",
