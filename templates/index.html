@@ -44,10 +44,18 @@
             </ul>
         </div>
         <div class="record-details">
+<!--            <h2>Record Details</h2>-->
+<!--            <ul>-->
+<!--                {% for key, value in record.items() %}-->
+<!--                    <li id="field_{{ key }}"><strong>{{ key }}:</strong> {{ value }}</li>-->
+<!--                {% endfor %}-->
+<!--            </ul>-->
             <h2>Record Details</h2>
             <ul>
                 {% for key, value in record.items() %}
-                    <li id="field_{{ key }}"><strong>{{ key }}:</strong> {{ value }}</li>
+                    {% if value and (value != 'nan') and (value != 'NaN') and not (value is number and value != value) %}
+                        <li id="field_{{ key }}"><strong>{{ key }}:</strong> {{ value }}</li>
+                    {% endif %}
                 {% endfor %}
             </ul>
             <div class="actions">
