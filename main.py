@@ -1,11 +1,10 @@
+from auxiliary_01 import *
 from fastapi import FastAPI, Request, Form, Body, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-import pandas as pd
 import numpy as np
-import os
 import shutil
 
 app = FastAPI()
@@ -14,32 +13,13 @@ app.add_middleware(SessionMiddleware, secret_key='RL23IPH')
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-PROJECTS_DIR = 'data'
-projects = [name for name in os.listdir(PROJECTS_DIR) if os.path.isdir(os.path.join(PROJECTS_DIR, name))]
 
+def read_all_csvs(project):
+    sources_dir = get_project_path(project, 'sources')
+    all_files = [os.path.join(sources_dir, f) for f in os.listdir(sources_dir) if f.endswith('.csv')]
+    all_dataframes = [read_csv(f) for f in all_files]
+    return pd.concat(all_dataframes, ignore_index=True) if all_dataframes else pd.DataFrame()
 
-def get_project_path(project_name, filename):
-    return os.path.join(PROJECTS_DIR, project_name, filename)
-
-
-def read_csv(file_path):
-    return pd.read_csv(file_path) if os.path.exists(file_path) else pd.DataFrame()
-
-
-def save_csv(df, file_path):
-    print(f"1 - Saving {file_path}")
-    df.to_csv(file_path, index=False)
-
-
-def read_static_info(file_path):
-    return [line.strip() for line in open(file_path, 'r')] if os.path.exists(file_path) else []
-
-
-# def read_all_csvs(project):
-#     sources_dir = get_project_path(project, 'sources')
-#     all_files = [os.path.join(sources_dir, f) for f in os.listdir(sources_dir) if f.endswith('.csv')]
-#     all_dataframes = [read_csv(f) for f in all_files]
-#     return pd.concat(all_dataframes, ignore_index=True) if all_dataframes else pd.DataFrame()
 
 def find_and_move_duplicates(project):
 
@@ -48,6 +28,7 @@ def find_and_move_duplicates(project):
     sources_dir = get_project_path(project, 'sources')
     duplicates_file = get_project_path(project, 'duplicates.csv')
     combined_file = get_project_path(project, 'all_data.csv')
+    print(combined_file)
 
     all_files = [os.path.join(sources_dir, f) for f in os.listdir(sources_dir) if f.endswith('.csv')]
     all_dataframes = [read_csv(f) for f in all_files]

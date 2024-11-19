@@ -50,14 +50,16 @@
 <!--                    <li id="field_{{ key }}"><strong>{{ key }}:</strong> {{ value }}</li>-->
 <!--                {% endfor %}-->
 <!--            </ul>-->
+
             <h2>Record Details</h2>
             <ul>
                 {% for key, value in record.items() %}
-                    {% if value and (value != 'nan') and (value != 'NaN') and not (value is number and value != value) %}
+                    {% if value and (value != 'null') and (value != 'nan') and (value != 'NaN') and not (value is number and value != value) %}
                         <li id="field_{{ key }}"><strong>{{ key }}:</strong> {{ value }}</li>
                     {% endif %}
                 {% endfor %}
             </ul>
+
             <div class="actions">
                 {% if not included and not excluded %}
                     <div>

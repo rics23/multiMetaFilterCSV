@@ -76,6 +76,10 @@ def find_and_move_duplicates(project):
     all_files = [os.path.join(processed_sources_dir, f) for f in os.listdir(processed_sources_dir) if
                  f.endswith('.csv')]
 
+    inclusions_file = get_project_path(project, 'inclusions.csv')
+    if os.path.exists(inclusions_file):
+        all_files.append(inclusions_file)
+
     venn_diagram_data = pd.DataFrame(columns=['EID', 'DOI', 'Abstract'])
 
     filenames = []
@@ -120,4 +124,4 @@ def find_and_move_duplicates(project):
 
 
 # Run for the specified project
-find_and_move_duplicates('msc_project')
+find_and_move_duplicates('phd_litreview1')
