@@ -68,7 +68,7 @@ def parse_arxiv_data(xml_data):
 def save_to_csv(data, filename):
     with open(filename, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        writer.writerow(["Title", "Authors", "Published Date", "Summary", "PDF Link"])
+        writer.writerow(["Title", "Authors", "Published Date", "Abstract", "Link"])
         writer.writerows(data)
     print(f"Results saved to {filename}")
 
