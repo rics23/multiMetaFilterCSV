@@ -22,8 +22,8 @@ def combine_csv_files(folder_path):
 
 
 # Example usage:
-folder_path = '../data/msc_project/sources'
+folder_path = '../projects/msc_project/sources'
 combined_df = combine_csv_files(folder_path)
 
 # Optionally, save the combined dataframe to a new CSV file
-combined_df.to_csv('data/msc_project/combined_output.csv', index=False)
+combined_df.to_csv('projects/msc_project/combined_output.csv', index=False)

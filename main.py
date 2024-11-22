@@ -1,3 +1,22 @@
+# A tool for streamlining systematic literature reviews, combining CSV
+# projects from diverse databases, standardising results on a local web page
+# for efficient duplicate detection, inclusion/exclusion tracking, and
+# PRISMA-aligned visualisations and supporting files.
+# Copyright (C) 2024  Ricardo Lopes  rics.23@gmail.com
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from auxiliary_01 import *
 from fastapi import FastAPI, Request, Form, Body, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -13,6 +32,9 @@ app.add_middleware(SessionMiddleware, secret_key='RL23IPH')
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+print("    multiMetaFilterCSV  Copyright (C) 2024  Ricardo Lopes  rics.23@gmail.com")
+print("    This program comes with ABSOLUTELY NO WARRANTY; for details read licensing file.")
+print("    This is free software, and you are welcome to redistribute it under certain conditions;")
 
 def read_all_csvs(project):
     sources_dir = get_project_path(project, 'sources')

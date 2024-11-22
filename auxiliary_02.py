@@ -1,3 +1,22 @@
+# A tool for streamlining systematic literature reviews, combining CSV
+# projects from diverse databases, standardising results on a local web page
+# for efficient duplicate detection, inclusion/exclusion tracking, and
+# PRISMA-aligned visualisations and supporting files.
+# Copyright (C) 2024  Ricardo Lopes  rics.23@gmail.com
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import requests
 import os
 import json
@@ -88,7 +107,7 @@ def fetch_unpaywall_data(doi, email):
         if response.status_code == 200:
             return response.json()
         else:
-            logging.warning(f"     Error fetching data for DOI {doi}: HTTP {response.status_code}")
+            logging.warning(f"     Error fetching projects for DOI {doi}: HTTP {response.status_code}")
             return None
     except requests.exceptions.RequestException as e:
         logging.error(f"     Request exception for DOI {doi}: {e}")
@@ -100,7 +119,7 @@ def save_unpaywall_data(doi, data, save_folder):
     filepath = os.path.join(save_folder, filename)
     with open(filepath, 'w') as json_file:
         json.dump(data, json_file, indent=4)
-    logging.info(f"     Saved data for DOI {doi} to {filepath}")
+    logging.info(f"     Saved projects for DOI {doi} to {filepath}")
 
 
 def find_pdf_links(data):
@@ -112,6 +131,6 @@ def find_pdf_links(data):
             if location.get('url_for_pdf'):
                 return location['url_for_pdf']
 
-    logging.warning("     No PDF link found in Unpaywall data")
+    logging.warning("     No PDF link found in Unpaywall projects")
     return None
 
